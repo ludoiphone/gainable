@@ -748,13 +748,11 @@ int main(void)
   for(uint loop=0;loop< ds_ID.size() ;loop++)
       ds_temperature.push_back(-9999.9); //  enregistre une information invalide pour commencer
 
-
   /****** ceci est la loop  *****/
 
   while(1)
   {
     lireDS18B20();
-    //afficherDS18B20();
     // insérer deux lignes
     cout << endl;
 
@@ -766,21 +764,13 @@ int main(void)
     cout << "ds_temperature[2] // temperatureEchangeurExt = " << ds_temperature[2] << endl;
     cout << "ds_temperature[3] // temperatureUnitéInt = " << ds_temperature[3] << endl;
     cout << "ds_temperature[4] // temperatureEchangeurInt = " << ds_temperature[4] << endl;
+      
     consigneDelta = ds_temperature[0] - delta; 
-    cout << "temperature Canicule Interieur =  " << consigneDelta << endl;
-    cout << "chrono = " << clock() << endl;
-    
+      
     commandeFroid();
     commandeChauffage();
     commandeCanicule();
-    
     gainable();
-    cout << "tempo V4V : " << departTempoV4V << endl;
-    cout << "tempo comp : " << departTempoComp << endl;
-    cout << "departChronoFiltre : " << departChronoFiltre << endl;
-    cout << "finChronoFiltre : " << finChronoFiltre << endl;
-    cout << "chronoNettoyageFiltre : " << nettoyageFiltre << endl;
-    
   }
  delete ds18b20;
  return 0;
