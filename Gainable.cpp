@@ -671,9 +671,36 @@ void fonctionsDivers() {
   hysteresisTempVitesseIntFroid();
 }
 
+// Ajuster les sorties avant l'arrêt du programme
+
+void FermeTout()
+{
+   /* digitalWrite(.....   */
+
+}
+
+
+// fonction de sortie après CTRL-C
+
+void mon_ctrl_c_handler(int s){
+           FermeTout();
+           delete ds18b20;
+           release_gpiod();
+           cout << endl << "fin du programme " << endl << flush;
+           exit(0);
+}
+
+
 int main (void) {
 
+
+  // fonction de capture de CTRL-C
+
+  signal (SIGINT,mon_ctrl_c_handler);
+
+
   /******  ceci est le setup  ******/
+
 
   pinMode (relaiEteHiver,OUTPUT);
   digitalWrite (relaiEteHiver,HIGH);
@@ -696,6 +723,7 @@ int main (void) {
   int DS_PIN=4;
   pinMode (DS_PIN,OPENDRAIN_PULLUP);
   ds18b20 = new BB_DS18B20 (gpioline[DS_PIN]);
+
   // charge info sur les ds18b20
   loadDSConfig ("DS18B20.conf", ds_ID);
 
