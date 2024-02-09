@@ -17,54 +17,47 @@ using namespace std;
 BB_DS18B20 * ds18b20;
 
 std::vector<unsigned long long > ds_ID;  //vector contenant l'ID des ds18b20
-std::vector<double> ds_temperature;      //vector qui va contenir les températures des ds18b20
+std::vector<double>
+ds_temperature;      //vector qui va contenir les températures des ds18b20
 
-void loadDSConfig(string filename, std::vector<unsigned long long> &array)
-{
+void loadDSConfig (string filename, std::vector<unsigned long long> &array) {
   unsigned long long ds_ID;
   stringstream ss;
-  ifstream file(filename);
-  if (file.is_open())
-  {
+  ifstream file (filename);
+  if (file.is_open() ) {
     string line;
-    while (getline(file, line))
-    {
+    while (getline (file, line) ) {
       // enleve espace
-      line.erase(remove(line.begin(), line.end(), ' '), line.end());
+      line.erase (remove (line.begin(), line.end(), ' '), line.end() );
       //  avons-nous au moins 17 caracteres
-      if(line.size() ==17)
-      {
+      if (line.size() ==17) {
         // ok avons-nous 28-
-        if(line.substr(0,3) == "28-")
-        {
-          stringstream ss(line.substr(3,-1));
+        if (line.substr (0,3) == "28-") {
+          stringstream ss (line.substr (3,-1) );
           ss >> hex >>  ds_ID;
           ds_ID = (ds_ID << 8) | 0x28;
-          array.push_back(ds_ID);  // valide donc insère ce capteur dans la matrice vector ds_ID
+          array.push_back (
+            ds_ID); // valide donc insère ce capteur dans la matrice vector ds_ID
         }
       }
     }
-  file.close();
+    file.close();
   }
 }
 
-void lireDS18B20()
-{
+void lireDS18B20() {
   // partir une  conversion
   ds18b20->GlobalStartConversion();
 
   // lire les capteurs
   // l'indetification des DS18B20  sont dans ds_ID
-  for(uint loop=0;loop < ds_ID.size();loop++)
-  {
-    if(ds18b20->ReadSensor(ds_ID[loop]))
-    {
+  for (uint loop=0; loop < ds_ID.size(); loop++) {
+    if (ds18b20->ReadSensor (ds_ID[loop]) ) {
       // valeur valide
       ds_temperature[loop]=ds18b20->temperature;
-    }
-    else
+    } else
       ds_temperature[loop]=-9999.9;
-    }
+  }
 }
 
 // pin (sortie)
@@ -131,225 +124,166 @@ unsigned long tempoFinEgouttage = 3000000;
 
 unsigned long departChronoFiltre;
 unsigned long finChronoFiltre;
-unsigned long nettoyageFiltre; 
+unsigned long nettoyageFiltre;
 
 bool fonctionFr = false;
 bool fonctionCh = false;
 bool fonctionCa = false;
 
 // les hysteresis de consignes
-void hysteresisTempExt()
-{
-  if (tempExt)
-  {
+void hysteresisTempExt() {
+  if (tempExt) {
     tempExt = ds_temperature[0] <= (consigneExt + hysteresis);
-  }
-  else
-  {
+  } else {
     tempExt = ds_temperature[0] <= (consigneExt - hysteresis);
   }
 }
 
-void hysteresisTempIntCa()
-{
-  if (tempIntCa)
-  {
+void hysteresisTempIntCa() {
+  if (tempIntCa) {
     tempIntCa = ds_temperature[2] >= (consigneDelta - hysteresis);
-  }
-  else
-  {
+  } else {
     tempIntCa = ds_temperature[2] >= (consigneDelta + hysteresis);
   }
 }
 
-void hysteresisTempVitesseExtFroid()
-{
-  if (tempVitExtFr)
-  {
+void hysteresisTempVitesseExtFroid() {
+  if (tempVitExtFr) {
     tempVitExtFr = ds_temperature[1] >= (consigneVitExtFr - hysteresis);
-  }
-  else
-  {
+  } else {
     tempVitExtFr = ds_temperature[1] >= (consigneVitExtFr + hysteresis);
   }
 }
 
-void hysteresisTempVitesseIntFroid()
-{
-  if (tempVitIntFr)
-  {
+void hysteresisTempVitesseIntFroid() {
+  if (tempVitIntFr) {
     tempVitIntFr = ds_temperature[3] >= (consigneVitIntFr - hysteresis);
-  }
-  else
-  {
+  } else {
     tempVitIntFr = ds_temperature[3] >= (consigneVitIntFr + hysteresis);
   }
 }
 
-void hysteresisTempVentilUnitIntChauf()
-{
-  if (tempVentUnitIntCh)
-  {
+void hysteresisTempVentilUnitIntChauf() {
+  if (tempVentUnitIntCh) {
     tempVentUnitIntCh = ds_temperature[4] >= (consigneDepartVentCh - hysteresis);
-  }
-  else
-  {
+  } else {
     tempVentUnitIntCh = ds_temperature[4] >= (consigneDepartVentCh + hysteresis);
   }
 }
 
-void hysteresisTempVitesseIntChauf()
-{
-  if (tempVitIntCh)
-  {
+void hysteresisTempVitesseIntChauf() {
+  if (tempVitIntCh) {
     tempVitIntCh = ds_temperature[3] >= (consigneVitIntCh - hysteresis);
-  }
-  else
-  {
+  } else {
     tempVitIntCh = ds_temperature[3] >= (consigneVitIntCh + hysteresis);
   }
 }
 
-void hysteresisTempVitesseExtChauf()
-{
-  if (tempVitExtCh)
-  {
+void hysteresisTempVitesseExtChauf() {
+  if (tempVitExtCh) {
     tempVitExtCh = ds_temperature[1] >= (consigneVitExtCh - hysteresis);
-  }
-  else
-  {
+  } else {
     tempVitExtCh = ds_temperature[1] >= (consigneVitExtCh - hysteresis);
   }
 }
 
 // les commandes des fonctions
 
-void commandeFroid()
-{
-  if (digitalRead(thermostats)==0)
-  {
+void commandeFroid() {
+  if (digitalRead (thermostats) ==0) {
     fonctionFr = true;
-  }
-  else
-  {
+  } else {
     fonctionFr = false;
   }
 }
 
-void commandeChauffage()
-{
-  if (ds_temperature[0] <= consigneBlocChauf && digitalRead(thermostats)==0) // si temperature exterieur au NORD est inferieur a 11°C et que un des 5 thermostat est NC (normalement closed (fermer))
-  {
+void commandeChauffage() {
+  if (ds_temperature[0] <= consigneBlocChauf &&
+      digitalRead (thermostats) ==
+      0) { // si temperature exterieur au NORD est inferieur a 11°C et que un des 5 thermostat est NC (normalement closed (fermer))
     fonctionCh = true;
-  }
-  else
-  {
+  } else {
     fonctionCh = false;
   }
 }
 
-void commandeCanicule()
-{
-  if (digitalRead(thermostats) == 0 && tempIntCa)
-  {
+void commandeCanicule() {
+  if (digitalRead (thermostats) == 0 && tempIntCa) {
     fonctionCa = true;
-  }
-  else
-  {
+  } else {
     fonctionCa = false;
   }
 }
 
 // les relais des ventilateurs interieur et exterieur
-void activeRelaisVentFroid()
-{
-  digitalWrite(relaiVentUnitExt,LOW);
-  
-  if (tempVitExtFr) // si temperature unité exterieur est supperieur a 20°C
-  {
-    digitalWrite(relaiVitesseVentExt,LOW); // grande vitesse 
+void activeRelaisVentFroid() {
+  digitalWrite (relaiVentUnitExt,LOW);
+
+  if (tempVitExtFr) { // si temperature unité exterieur est supperieur a 20°C
+    digitalWrite (relaiVitesseVentExt,LOW); // grande vitesse
+  } else {
+    digitalWrite (relaiVitesseVentExt,HIGH); // petite vitesse
   }
-  else
-  {
-    digitalWrite(relaiVitesseVentExt,HIGH); // petite vitesse
-  }
-  
-  digitalWrite(relaiVentUnitInt,LOW);
-  
-  if (tempVitIntFr) // si la temperature unité interieur est inferieur a 23°C
-  {
-    digitalWrite(relaiVitesseVentInt,HIGH);  // ventilateur interieur petite vitesse
-  }
-  else
-  {
-    digitalWrite(relaiVitesseVentInt,LOW);  // ventilateur interieur grande vitesse
+
+  digitalWrite (relaiVentUnitInt,LOW);
+
+  if (tempVitIntFr) { // si la temperature unité interieur est inferieur a 23°C
+    digitalWrite (relaiVitesseVentInt,HIGH); // ventilateur interieur petite vitesse
+  } else {
+    digitalWrite (relaiVitesseVentInt,LOW); // ventilateur interieur grande vitesse
   }
 }
 
-void activeRelaisVentIntChauffage()
-{  
-  if (tempVentUnitIntCh)
-  {
-    digitalWrite(relaiVentUnitInt,LOW); // active la ventilation
+void activeRelaisVentIntChauffage() {
+  if (tempVentUnitIntCh) {
+    digitalWrite (relaiVentUnitInt,LOW); // active la ventilation
   }
-  
-  if (tempVitIntCh) // temperature a l'aspiration  
-  {
-    digitalWrite(relaiVitesseVentInt,HIGH); // petite vitesse
-  }
-  else
-  {
-    digitalWrite(relaiVitesseVentInt,LOW); // grande vitesse
+
+  if (tempVitIntCh) { // temperature a l'aspiration
+    digitalWrite (relaiVitesseVentInt,HIGH); // petite vitesse
+  } else {
+    digitalWrite (relaiVitesseVentInt,LOW); // grande vitesse
   }
 }
 
-void activeRelaisVentExtChauffage()
-{
-  digitalWrite(relaiVentUnitExt,LOW);
-  
-  if (tempVitExtCh)
-  {
-    digitalWrite(relaiVitesseVentExt,LOW); // grande vitesse
-  }
-  else
-  {
-    digitalWrite(relaiVitesseVentExt,HIGH); // petite vitesse
+void activeRelaisVentExtChauffage() {
+  digitalWrite (relaiVentUnitExt,LOW);
+
+  if (tempVitExtCh) {
+    digitalWrite (relaiVitesseVentExt,LOW); // grande vitesse
+  } else {
+    digitalWrite (relaiVitesseVentExt,HIGH); // petite vitesse
   }
 }
 
-void activeRelaisVentsCanicule()
-{
-  digitalWrite(relaiVentUnitInt,LOW);
-  digitalWrite(relaiVitesseVentInt,LOW);
-  digitalWrite(relaiVentUnitExt,LOW);
-  digitalWrite(relaiVitesseVentExt,LOW);
+void activeRelaisVentsCanicule() {
+  digitalWrite (relaiVentUnitInt,LOW);
+  digitalWrite (relaiVitesseVentInt,LOW);
+  digitalWrite (relaiVentUnitExt,LOW);
+  digitalWrite (relaiVitesseVentExt,LOW);
 }
 
-void activeRelaisVentEgouttageFr()
-{
-  digitalWrite(relaiVentUnitInt,LOW);
-  digitalWrite(relaiVitesseVentInt,HIGH); // petite vitesse
+void activeRelaisVentEgouttageFr() {
+  digitalWrite (relaiVentUnitInt,LOW);
+  digitalWrite (relaiVitesseVentInt,HIGH); // petite vitesse
 }
 
-void activeRelaisVentEgouttageCh()
-{
-  digitalWrite(relaiVentUnitExt,LOW);
-  digitalWrite(relaiVitesseVentExt,LOW); // grande vitesse
+void activeRelaisVentEgouttageCh() {
+  digitalWrite (relaiVentUnitExt,LOW);
+  digitalWrite (relaiVitesseVentExt,LOW); // grande vitesse
 }
 
 // l'arret des relais ( HIGH 0 )
-void desactiveTousRelais()
-{
-  digitalWrite(relaiVentUnitExt,HIGH);
-  digitalWrite(relaiVentUnitInt,HIGH);
-  digitalWrite(relaiVitesseVentExt,HIGH);
-  digitalWrite(relaiVitesseVentInt,HIGH);
-  digitalWrite(relaiComp,HIGH);
-  digitalWrite(relaiV4V,HIGH);
+void desactiveTousRelais() {
+  digitalWrite (relaiVentUnitExt,HIGH);
+  digitalWrite (relaiVentUnitInt,HIGH);
+  digitalWrite (relaiVitesseVentExt,HIGH);
+  digitalWrite (relaiVitesseVentInt,HIGH);
+  digitalWrite (relaiComp,HIGH);
+  digitalWrite (relaiV4V,HIGH);
 }
 
-enum
-{
+enum {
   DEPART,
   COMMANDE_FROID,
   TEMPO_V4V,
@@ -377,449 +311,354 @@ enum
   FILTRE
 } etatsGainable;
 
-void autoModeEteHiver()
-{
-  if (clock() - departAutoMode >= autoMode)
-  {
+void autoModeEteHiver() {
+  if (clock() - departAutoMode >= autoMode) {
     etatsGainable = DEPART;
   }
 }
-     
-void gainable()
-{
-  switch (etatsGainable)
-  {
-    case DEPART:
+
+void gainable() {
+  switch (etatsGainable) {
+  case DEPART:
     cout << "DEPART" << endl << endl;
-    
+
     departAutoMode = clock();
-    if (ds_temperature[0] < consigneExt)
-    {
-      digitalWrite(relaiEteHiver,HIGH);
+    if (ds_temperature[0] < consigneExt) {
+      digitalWrite (relaiEteHiver,HIGH);
       etatsGainable = COMMANDE_CHAUFFAGE;
-    }
-    else if (ds_temperature[0] <= consigneCanicule)
-    {
-      digitalWrite(relaiEteHiver,LOW); // relais ete hiver a l'etat 1 
+    } else if (ds_temperature[0] <= consigneCanicule) {
+      digitalWrite (relaiEteHiver,LOW); // relais ete hiver a l'etat 1
       etatsGainable = COMMANDE_FROID;
-    }
-    else 
-    {
+    } else {
       etatsGainable = COMMANDE_CANICULE;
     }
-    
+
     break;
-    
-    case COMMANDE_FROID:
+
+  case COMMANDE_FROID:
     cout << "COMMANDE_FROID" << endl << endl;
-    
-    if (fonctionFr == true)
-    {
+
+    if (fonctionFr == true) {
       departTempoV4V = clock();
       etatsGainable = TEMPO_V4V;
-    }
-    else
-    {
+    } else {
       autoModeEteHiver();
       departTempoV4V = clock();
       desactiveTousRelais();
     }
-    
+
     break;
 
-    case TEMPO_V4V:
+  case TEMPO_V4V:
     cout << "TEMPO_V4V" << endl << endl;
-    
-    if (fonctionFr == false)
-    {
+
+    if (fonctionFr == false) {
       etatsGainable = COMMANDE_FROID;
-    }
-    else if (clock() - departTempoV4V >= tempoV4V)
-    {
+    } else if (clock() - departTempoV4V >= tempoV4V) {
       departTempoComp = clock();
-      digitalWrite(relaiV4V, LOW);
+      digitalWrite (relaiV4V, LOW);
       etatsGainable = TEMPO_COMPRESSEUR_FROID;
-    }
-    else
-    {
+    } else {
       activeRelaisVentFroid();
     }
-      
+
     break;
 
-    case TEMPO_COMPRESSEUR_FROID:
+  case TEMPO_COMPRESSEUR_FROID:
     cout << "TEMPO_COMPRESSEUR_FROID" << endl << endl;
 
-    if (fonctionFr == false)
-    {
+    if (fonctionFr == false) {
       etatsGainable = COMMANDE_FROID;
-    }
-    else if (clock() - departTempoComp >= tempoComp)
-    {
+    } else if (clock() - departTempoComp >= tempoComp) {
       departChronoFiltre = clock();
       etatsGainable = COMPRESSEUR_FROID;
-    }
-    else
-    {
+    } else {
       activeRelaisVentFroid();
     }
-      
+
     break;
 
-    case COMPRESSEUR_FROID:
+  case COMPRESSEUR_FROID:
     cout << "COMPRESSEUR_FROID" << endl << endl;
 
-    if (fonctionFr == false)
-    {
+    if (fonctionFr == false) {
       finChronoFiltre = clock();
       nettoyageFiltre = (finChronoFiltre - departChronoFiltre) + nettoyageFiltre;
       desactiveTousRelais();
       etatsGainable = COMMANDE_FROID;
-    }
-    else if (ds_temperature[4] <= consigneDegFr)
-    {
+    } else if (ds_temperature[4] <= consigneDegFr) {
       finChronoFiltre = clock();
       nettoyageFiltre = (finChronoFiltre - departChronoFiltre) + nettoyageFiltre;
       etatsGainable = DEGIVRAGE_FROID;
-    }
-    else
-    {
+    } else {
       activeRelaisVentFroid();
-      digitalWrite(relaiComp,LOW);
+      digitalWrite (relaiComp,LOW);
     }
-      
+
     break;
 
-    case DEGIVRAGE_FROID:
+  case DEGIVRAGE_FROID:
     cout << "DEGIVRAGE_FROID" << endl << endl;
 
-    if (ds_temperature[4] >= consigneFinDegFr)
-    {
+    if (ds_temperature[4] >= consigneFinDegFr) {
       departTempoEgouttage = clock();
       etatsGainable = EGOUTTAGE_FROID;
-    }
-    else
-    {
+    } else {
       desactiveTousRelais();
     }
-      
+
     break;
 
-    case EGOUTTAGE_FROID:
+  case EGOUTTAGE_FROID:
     cout << "EGOUTTAGE_FROID" << endl << endl;
 
-    if (clock() - departTempoEgouttage >= tempoEgouttage)
-    {
+    if (clock() - departTempoEgouttage >= tempoEgouttage) {
       departTempoFinEgouttage = clock();
       etatsGainable = FIN_EGOUTTAGE_FROID;
-    }
-    else
-    {
+    } else {
       activeRelaisVentEgouttageFr();
     }
-      
+
     break;
-    
-    case FIN_EGOUTTAGE_FROID:
+
+  case FIN_EGOUTTAGE_FROID:
     cout << "FIN_EGOUTTAGE_FROID" << endl << endl;
 
-    if (clock() - departTempoFinEgouttage >= tempoFinEgouttage)
-    {
+    if (clock() - departTempoFinEgouttage >= tempoFinEgouttage) {
       etatsGainable = DEPART;
-    }
-    else
-    {
+    } else {
       desactiveTousRelais();
     }
-    
-    
+
+
     break;
 
-    case COMMANDE_CHAUFFAGE:
+  case COMMANDE_CHAUFFAGE:
     cout << "COMMANDE_CHAUFFAGE" << endl << endl;
 
-    if (fonctionCh == true)
-    {
+    if (fonctionCh == true) {
       departTempoComp = clock();
       etatsGainable = TEMPO_COMPRESSEUR_CHAUFFAGE;
-    }
-    else
-    {
+    } else {
       autoModeEteHiver();
       departTempoComp = clock();
       desactiveTousRelais();
     }
-      
+
     break;
 
-    case TEMPO_COMPRESSEUR_CHAUFFAGE:
+  case TEMPO_COMPRESSEUR_CHAUFFAGE:
     cout << "TEMPO_COMPRESSEUR_CHAUFFAGE" << endl << endl;
 
-    if (fonctionCh == false)
-    {
+    if (fonctionCh == false) {
       etatsGainable = COMMANDE_CHAUFFAGE;
-    }
-    else if (clock() - departTempoComp >= tempoComp)
-    {
+    } else if (clock() - departTempoComp >= tempoComp) {
       departChronoFiltre = clock();
       departTempoDegCh = clock();
       etatsGainable = TEMPO_DEGIVRAGE;
-    }
-    else
-    {
+    } else {
       activeRelaisVentExtChauffage();
     }
-      
+
     break;
 
-    case TEMPO_DEGIVRAGE:
+  case TEMPO_DEGIVRAGE:
     cout << "TEMPO_DEGIVRAGE" << endl << endl;
 
-    if (fonctionCh == false)
-    {
+    if (fonctionCh == false) {
       finChronoFiltre = clock();
       nettoyageFiltre = (finChronoFiltre - departChronoFiltre) + nettoyageFiltre;
       etatsGainable = COMMANDE_CHAUFFAGE;
-    }
-    else if (clock() - departTempoDegCh >= tempoDegCh)
-    {
+    } else if (clock() - departTempoDegCh >= tempoDegCh) {
       finChronoFiltre = clock();
       nettoyageFiltre = (finChronoFiltre - departChronoFiltre) + nettoyageFiltre;
       etatsGainable = MODE_DEGIVRAGE;
-    }
-    else
-    {
-      digitalWrite(relaiComp,LOW);
+    } else {
+      digitalWrite (relaiComp,LOW);
       activeRelaisVentIntChauffage();
       activeRelaisVentExtChauffage();
     }
     break;
 
-    case MODE_DEGIVRAGE:
+  case MODE_DEGIVRAGE:
     cout << "MODE_DEGIVRAGE" << endl << endl;
 
-    if (ds_temperature[1] <= consigneModeDegCh)
-    {
+    if (ds_temperature[1] <= consigneModeDegCh) {
       departTempoV4VDegElec = clock();
       etatsGainable = TEMPO_DEG_V4V;
-    }
-    else
-    {
+    } else {
       departTempoDegNat = clock();
       etatsGainable = DEGIVRAGE_NATUREL;
     }
     break;
 
-    case DEGIVRAGE_NATUREL:
+  case DEGIVRAGE_NATUREL:
     cout << "DEGIVRAGE_NATUREL" << endl << endl;
 
-    if (clock() - departTempoDegNat >= tempoDegNat)
-    {
+    if (clock() - departTempoDegNat >= tempoDegNat) {
       departTempoEgouttage = clock();
       etatsGainable = EGOUTTAGE_NATUREL;
-    }
-    else
-    {
+    } else {
       desactiveTousRelais();
     }
-      
+
     break;
 
-    case EGOUTTAGE_NATUREL:
+  case EGOUTTAGE_NATUREL:
     cout << "EGOUTTAGE_NATUREL" << endl << endl;
 
-    if (clock() - departTempoEgouttage >= tempoEgouttage)
-    {
+    if (clock() - departTempoEgouttage >= tempoEgouttage) {
       departTempoFinEgouttage = clock();
       etatsGainable = FIN_EGOUTTAGE_NATUREL;
-    }
-    else
-    {
+    } else {
       activeRelaisVentEgouttageCh();
     }
-      
-    break;
-    
-    case FIN_EGOUTTAGE_NATUREL:
-    cout << "FIN_EGOUTTAGE_NATUREL" << endl << endl;
-    
-    if (clock() - departTempoFinEgouttage >= tempoFinEgouttage)
-    {
-      etatsGainable = DEPART;
-    }
-    else
-    {
-      desactiveTousRelais();
-    }
-    
+
     break;
 
-    case TEMPO_DEG_V4V:
+  case FIN_EGOUTTAGE_NATUREL:
+    cout << "FIN_EGOUTTAGE_NATUREL" << endl << endl;
+
+    if (clock() - departTempoFinEgouttage >= tempoFinEgouttage) {
+      etatsGainable = DEPART;
+    } else {
+      desactiveTousRelais();
+    }
+
+    break;
+
+  case TEMPO_DEG_V4V:
     cout << "TEMPO_DEG_V4V" << endl << endl;
 
-    if (clock() - departTempoV4VDegElec >= tempoV4VDegElec)
-    {
+    if (clock() - departTempoV4VDegElec >= tempoV4VDegElec) {
       departTempoCompDegElec = clock();
       etatsGainable = TEMPO_DEG_COMPRESSEUR;
-    }
-    else
-    {
+    } else {
       desactiveTousRelais();
     }
-      
+
     break;
 
-    case TEMPO_DEG_COMPRESSEUR:
+  case TEMPO_DEG_COMPRESSEUR:
     cout << "TEMPO_DEG_COMPRESSEUR" << endl << endl;
 
-    if (clock() - departTempoCompDegElec >= tempoCompDegElec)
-    {
+    if (clock() - departTempoCompDegElec >= tempoCompDegElec) {
       departTempoTempDegElec = clock();
       etatsGainable = DEGIVRAGE_ELECTRIC;
+    } else {
+      digitalWrite (relaiV4V,LOW);
     }
-    else
-    {
-      digitalWrite(relaiV4V,LOW);
-    }
-      
+
     break;
 
-    case DEGIVRAGE_ELECTRIC:
+  case DEGIVRAGE_ELECTRIC:
     cout << "DEGIVRAGE_ELECTRIC" << endl << endl;
 
-    if (ds_temperature[2] >= consigneFinDegCh || (clock() - departTempoTempDegElec >=tempoTempDegElec))
-    {
+    if (ds_temperature[2] >= consigneFinDegCh ||
+        (clock() - departTempoTempDegElec >=tempoTempDegElec) ) {
       departTempoEgouttage = clock();
       etatsGainable = EGOUTTAGE_CHAUFFAGE;
+    } else {
+      digitalWrite (relaiComp,LOW);
     }
-    else
-    {
-      digitalWrite(relaiComp,LOW);
-    }
-      
+
     break;
 
-    case EGOUTTAGE_CHAUFFAGE:
+  case EGOUTTAGE_CHAUFFAGE:
     cout << "EGOUTTAGE_CHAUFFAGE" << endl << endl;
 
-    if (clock() - departTempoEgouttage >= tempoEgouttage)
-    {
+    if (clock() - departTempoEgouttage >= tempoEgouttage) {
       departTempoFinEgouttage = clock();
       etatsGainable = FIN_EGOUTTAGE_CHAUFFAGE;
-    }
-    else
-    {
+    } else {
       desactiveTousRelais();
     }
     break;
 
-    case FIN_EGOUTTAGE_CHAUFFAGE:
+  case FIN_EGOUTTAGE_CHAUFFAGE:
     cout << "FIN_EGOUTTAGE_CHAUFFAGE" << endl << endl;
 
-    if (clock() - departTempoFinEgouttage >= tempoFinEgouttage)
-    {
+    if (clock() - departTempoFinEgouttage >= tempoFinEgouttage) {
       desactiveTousRelais();
       etatsGainable = DEPART;
-    }
-    else
-    {
+    } else {
       activeRelaisVentEgouttageCh();
     }
-    
+
     break;
 
-    case COMMANDE_CANICULE:
+  case COMMANDE_CANICULE:
     cout << "COMMANDE_CANICULE" << endl << endl;
 
-    if (fonctionCa == true)
-    {
+    if (fonctionCa == true) {
       departTempoV4V = clock();
       etatsGainable = TEMPO_V4V_CANICULE;
-    }
-    else
-    {
+    } else {
       autoModeEteHiver();
       departTempoV4V = clock();
       desactiveTousRelais();
     }
-    
+
     break;
 
-    case TEMPO_V4V_CANICULE:
+  case TEMPO_V4V_CANICULE:
     cout << "TEMPO_V4V_CANICULE" << endl << endl;
 
-    if (fonctionCa == false)
-    {
+    if (fonctionCa == false) {
       etatsGainable = COMMANDE_CANICULE;
-    }
-    else if (clock() - departTempoV4V >= tempoV4V)
-    {
+    } else if (clock() - departTempoV4V >= tempoV4V) {
       departTempoComp = clock();
-      digitalWrite(relaiV4V,LOW);
+      digitalWrite (relaiV4V,LOW);
       etatsGainable = TEMPO_COMPRESSEUR_CANICULE;
-    }
-    else
-    {
+    } else {
       activeRelaisVentsCanicule();
-      digitalWrite(relaiVentUnitInt, HIGH);
+      digitalWrite (relaiVentUnitInt, HIGH);
     }
-      
+
     break;
 
-    case TEMPO_COMPRESSEUR_CANICULE:
+  case TEMPO_COMPRESSEUR_CANICULE:
     cout << "TEMPO_COMPRESSEUR_CANICULE" << endl << endl;
 
-    if (fonctionCa == false)
-    {
+    if (fonctionCa == false) {
       etatsGainable = COMMANDE_CANICULE;
-    }
-    else if (clock() - departTempoComp >= tempoComp)
-    {
+    } else if (clock() - departTempoComp >= tempoComp) {
       departChronoFiltre = clock();
       etatsGainable = COMPRESSEUR_CANICULE;
-    }
-    else
-    {
+    } else {
       activeRelaisVentsCanicule();
     }
-      
+
     break;
 
-    case COMPRESSEUR_CANICULE:
+  case COMPRESSEUR_CANICULE:
     cout << "COMPRESSEUR_CANICULE" << endl << endl;
 
-    if (fonctionCa == false)
-    {
+    if (fonctionCa == false) {
       finChronoFiltre = clock();
       nettoyageFiltre = (finChronoFiltre - departChronoFiltre) + nettoyageFiltre;
       etatsGainable = COMMANDE_CANICULE;
-    }
-    else if (ds_temperature[4] <= consigneDegFr)
-    {
+    } else if (ds_temperature[4] <= consigneDegFr) {
       finChronoFiltre = clock();
       nettoyageFiltre = (finChronoFiltre - departChronoFiltre) + nettoyageFiltre;
       etatsGainable = DEGIVRAGE_FROID;
+    } else {
+      digitalWrite (relaiComp,LOW);
     }
-    else
-    {
-      digitalWrite(relaiComp,LOW);
-    }
-      
+
     break;
 
-    case FILTRE:
+  case FILTRE:
 
-    if (digitalRead(capteurFiltre)==0)
-    {
+    if (digitalRead (capteurFiltre) ==0) {
       nettoyageFiltre = 0;
     }
-      
+
     break;
   }
 }
 
-void fonctionsDivers()
-{
+void fonctionsDivers() {
   commandeFroid();
   commandeChauffage();
   commandeCanicule();
@@ -832,51 +671,56 @@ void fonctionsDivers()
   hysteresisTempVitesseIntFroid();
 }
 
-int main(void)
-{
+int main (void) {
 
   /******  ceci est le setup  ******/
-    
-  pinMode(relaiEteHiver,OUTPUT);
-  digitalWrite(relaiEteHiver,HIGH);
-  pinMode(relaiComp,OUTPUT);
-  digitalWrite(relaiComp,HIGH);
-  pinMode(relaiV4V,OUTPUT);
-  digitalWrite(relaiV4V,HIGH);
-  pinMode(relaiVentUnitExt,OUTPUT);
-  digitalWrite(relaiVentUnitExt,HIGH);
-  pinMode(relaiVitesseVentExt,OUTPUT);
-  digitalWrite(relaiVitesseVentExt,HIGH);
-  pinMode(relaiVentUnitInt,OUTPUT);
-  digitalWrite(relaiVentUnitInt,HIGH);
-  pinMode(relaiVitesseVentInt,OUTPUT);
-  digitalWrite(relaiVitesseVentInt,HIGH);
-  
-  pinMode(thermostats,INPUT_PULLUP);
-  pinMode(capteurFiltre,INPUT_PULLUP);
-  
+
+  pinMode (relaiEteHiver,OUTPUT);
+  digitalWrite (relaiEteHiver,HIGH);
+  pinMode (relaiComp,OUTPUT);
+  digitalWrite (relaiComp,HIGH);
+  pinMode (relaiV4V,OUTPUT);
+  digitalWrite (relaiV4V,HIGH);
+  pinMode (relaiVentUnitExt,OUTPUT);
+  digitalWrite (relaiVentUnitExt,HIGH);
+  pinMode (relaiVitesseVentExt,OUTPUT);
+  digitalWrite (relaiVitesseVentExt,HIGH);
+  pinMode (relaiVentUnitInt,OUTPUT);
+  digitalWrite (relaiVentUnitInt,HIGH);
+  pinMode (relaiVitesseVentInt,OUTPUT);
+  digitalWrite (relaiVitesseVentInt,HIGH);
+
+  pinMode (thermostats,INPUT_PULLUP);
+  pinMode (capteurFiltre,INPUT_PULLUP);
+
   int DS_PIN=4;
-  pinMode(DS_PIN,OPENDRAIN_PULLUP);
-  ds18b20 = new BB_DS18B20(gpioline[DS_PIN]);
+  pinMode (DS_PIN,OPENDRAIN_PULLUP);
+  ds18b20 = new BB_DS18B20 (gpioline[DS_PIN]);
   // charge info sur les ds18b20
-  loadDSConfig("DS18B20.conf", ds_ID);
+  loadDSConfig ("DS18B20.conf", ds_ID);
 
   // créer  le vecteur contenant la température des DS18b20
-  for(uint loop=0;loop< ds_ID.size() ;loop++)
-      ds_temperature.push_back(-9999.9); //  enregistre une information invalide pour commencer
+  for (uint loop=0; loop< ds_ID.size() ; loop++)
+    ds_temperature.push_back (
+      -9999.9); //  enregistre une information invalide pour commencer
 
   /****** ceci est la loop  *****/
 
-  while(1)
-  {
-    cout << "ds_temperature[0] // temperatureExt = " << (int(ds_temperature[0]*2))/2.0 << endl; // sonde NORD
-    cout << "ds_temperature[1] // temperatureUnitéExt = " << (int(ds_temperature[1]*2))/2.0 << endl;
-    cout << "ds_temperature[2] // temperatureEchangeurExt = " << (int(ds_temperature[2]*2))/2.0 << endl;
-    cout << "ds_temperature[3] // temperatureUnitéInt = " << (int(ds_temperature[3]*2))/2.0 << endl;
-    cout << "ds_temperature[4] // temperatureEchangeurInt = " << (int(ds_temperature[4]*2))/2.0 << endl;
-    consigneDelta = ds_temperature[0] - delta; 
-    cout << "consigne Canicule Interieur =  " << (int(consigneDelta*2))/2.0 << endl << endl;
-    
+  while (1) {
+    cout << "ds_temperature[0] // temperatureExt = " << (int (
+           ds_temperature[0]*2) ) /2.0 << endl; // sonde NORD
+    cout << "ds_temperature[1] // temperatureUnitéExt = " << (int (
+           ds_temperature[1]*2) ) /2.0 << endl;
+    cout << "ds_temperature[2] // temperatureEchangeurExt = " << (int (
+           ds_temperature[2]*2) ) /2.0 << endl;
+    cout << "ds_temperature[3] // temperatureUnitéInt = " << (int (
+           ds_temperature[3]*2) ) /2.0 << endl;
+    cout << "ds_temperature[4] // temperatureEchangeurInt = " << (int (
+           ds_temperature[4]*2) ) /2.0 << endl;
+    consigneDelta = ds_temperature[0] - delta;
+    cout << "consigne Canicule Interieur =  " << (int (consigneDelta*2) ) /2.0 <<
+         endl << endl;
+
     time_t rawtime;
     time (&rawtime);
     cout << "date, heure, année -> " << ctime (&rawtime) << endl;
@@ -890,6 +734,6 @@ int main(void)
     fonctionsDivers();
 
   }
- delete ds18b20;
- return 0;
+  delete ds18b20;
+  return 0;
 }
