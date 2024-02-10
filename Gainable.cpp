@@ -211,18 +211,6 @@ void hysteresisTempVitesseIntFroid()
   }
 }
 
-void hysteresisTempVentilUnitIntChauf()
-{
-  if (tempVentUnitIntCh)
-  {
-    tempVentUnitIntCh = ds_temperature[4] >= (consigneDepartVentCh - hysteresis);
-  }
-  else
-  {
-    tempVentUnitIntCh = ds_temperature[4] >= (consigneDepartVentCh + hysteresis);
-  }
-}
-
 void hysteresisTempVitesseIntChauf()
 {
   if (tempVitIntCh)
@@ -314,20 +302,9 @@ void activeRelaisVentFroid()
 
 void activeRelaisVentIntChauffage()
 {  
-  if (tempVentUnitIntCh)
+  if (ds_temperature[3] >= consigneDepartVentChauf)
   {
     digitalWrite(relaiVentUnitInt,LOW); // active la ventilation
-  }
-  
-  if (tempVitIntCh) // temperature a l'aspiration  
-  {
-    digitalWrite(relaiVitesseVentInt,LOW); // grande vitesse
-  }
-  else
-  {
-    digitalWrite(relaiVitesseVentInt,HIGH); // petite vitesse
-  }
-}
 
 void activeRelaisVentExtChauffage()
 {
