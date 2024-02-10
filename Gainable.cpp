@@ -300,11 +300,16 @@ void activeRelaisVentFroid()
   }
 }
 
-void activeRelaisVentIntChauffage()
+void activeRelaisVitesseIntChauffage()
 {  
-  if (ds_temperature[3] >= consigneDepartVentChauf)
+  if (tempVitIntCh)
   {
-    digitalWrite(relaiVentUnitInt,LOW); // active la ventilation
+    digitalWrite(relaiVitesseVentInt,LOW);
+  }
+  else
+  {
+    digitalWrite(relaiVitesseVentInt,HIGH);
+
 
 void activeRelaisVentExtChauffage()
 {
@@ -598,8 +603,12 @@ void gainable()
     else
     {
       digitalWrite(relaiComp,LOW);
-      activeRelaisVentIntChauffage();
+      activeRelaisVitesseVentIntChauffage();
       activeRelaisVentExtChauffage();
+      if (ds_temperature[4] >= consigneDepartVentCh)
+      {
+        digitalWrite(relaiVentUnitInt,LOW);
+      }
     }
     break;
 
