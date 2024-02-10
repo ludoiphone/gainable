@@ -147,7 +147,7 @@ unsigned long tempoTempDegElec = 30000000; // 5 minutes
 unsigned long departTempoDegCh;
 unsigned long tempoDegCh = 450000000; // 45 minutes
 unsigned long departTempoDegNat;
-unsigned long tempoDegNat = 600000000; // 10 minutes
+unsigned long tempoDegNat = 60000000; // 10 minutes
 unsigned long departTempoEgouttage;
 unsigned long tempoEgouttage = 30000000; // 5 minutes
 unsigned long departTempoFinEgouttage;
