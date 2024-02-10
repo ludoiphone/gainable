@@ -309,7 +309,8 @@ void activeRelaisVitesseIntChauffage()
   else
   {
     digitalWrite(relaiVitesseVentInt,HIGH);
-
+  }
+}
 
 void activeRelaisVentExtChauffage()
 {
