@@ -791,11 +791,6 @@ void gainable()
       compteurV4VCa++;
       etatsGainable = TEMPO_COMPRESSEUR_CANICULE;
     }
-    else
-    {
-      activeRelaisVentsCanicule();
-      digitalWrite(relaiVentUnitInt, HIGH);
-    }
       
     break;
 
