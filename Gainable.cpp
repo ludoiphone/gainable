@@ -81,11 +81,13 @@ const int relaiVitesseVentInt=20;
 
 // les compteurs
 
-long compteurComp = 0;
+
 long compteurV4V = 0;
+long compteurComp = 0;
 long compteurDegFr = 0;
 long compteurEgouttageFr = 0;
 long compteurFinEgouttageFr = 0;
+long compteurCompCh = 0;
 long compteurDegElec = 0;
 long compteurDegNat = 0;
 long compteurEgouttageNat = 0;
@@ -133,9 +135,9 @@ bool tempVitExtCh = false;
 // les temporisations
 
 unsigned long departAutoMode;
-unsigned long autoMode = 1000000;// 5 secondes (microseconde)
+unsigned long autoMode = 1000000;// 5 secondes 
 unsigned long departTempoV4V;
-unsigned long tempoV4V = 4500000; // 45 secondes
+unsigned long tempoV4V = 2700000; // 45 secondes
 unsigned long departTempoComp;
 unsigned long tempoComp = 9000000; // 1.5 minutes
 unsigned long departTempoCompDegElec;
@@ -145,7 +147,7 @@ unsigned long tempoV4VDegElec = 6000000; // 1 minutes
 unsigned long departTempoTempDegElec;
 unsigned long tempoTempDegElec = 30000000; // 5 minutes
 unsigned long departTempoDegCh;
-unsigned long tempoDegCh = 450000000; // 45 minutes
+unsigned long tempoDegCh = 280000000; // 45 minutes
 unsigned long departTempoDegNat;
 unsigned long tempoDegNat = 60000000; // 10 minutes
 unsigned long departTempoEgouttage;
@@ -300,15 +302,15 @@ void activeRelaisVentFroid()
   }
 }
 
-void activeRelaisVitesseIntChauffage()
+void activeRelaisVitesseVentIntChauffage()
 {  
-  if (tempVitIntCh)
+  if (tempVitIntCh) // temperature a l'aspiration  
   {
-    digitalWrite(relaiVitesseVentInt,LOW);
+    digitalWrite(relaiVitesseVentInt,LOW); // grande vitesse
   }
   else
   {
-    digitalWrite(relaiVitesseVentInt,HIGH);
+    digitalWrite(relaiVitesseVentInt,HIGH); // petite vitesse
   }
 }
 
@@ -578,7 +580,7 @@ void gainable()
     {
       departChronoFiltre = clock();
       departTempoDegCh = clock();
-      compteurComp++;
+      compteurCompCh++;
       etatsGainable = TEMPO_DEGIVRAGE;
     }
     else
@@ -858,7 +860,6 @@ void fonctionsDivers()
   commandeCanicule();
   hysteresisTempExt();
   hysteresisTempIntCa();
-  hysteresisTempVentilUnitIntChauf();
   hysteresisTempVitesseExtChauf();
   hysteresisTempVitesseIntChauf();
   hysteresisTempVitesseExtFroid();
@@ -927,7 +928,9 @@ int main(void)
     cout << "chronoNettoyageFiltre : " << nettoyageFiltre << endl << endl;
     
     cout << "compteurDemarageV4V = " << compteurV4V << endl;
-    cout << "compteurDemarageCompresseur = " << compteurComp << endl;
+    cout << "compteurDemarageCompresseurFroid = " << compteurComp << endl;
+    cout << "compteurDemarageCompresseurChauffage = " << compteurCompCh << endl;
+    cout << "compteurDemarageCompresseurCanicule = " << compteurCompCa << endl;
     cout << "compteurDegivrageFroid = " << compteurDegFr << endl;
     cout << "compteurEgouttageFroid = " << compteurEgouttageFr << endl;
     cout << "compteurFinEgouttageFroid = " << compteurFinEgouttageFr << endl;
@@ -940,7 +943,6 @@ int main(void)
     cout << "compteurEgouttageChauffage = " << compteurEgouttageCh << endl;
     cout << "compteurFinEgouttageChauffage = " << compteurFinEgouttageCh << endl;
     cout << "compteurV4VCanicule = " << compteurV4VCa << endl;
-    cout << "compteurCompresseurCanicule = " << compteurCompCa << endl;
     cout << "compteurDegivrageCanicule = " << compteurDegCa << endl << endl;
 
     lireDS18B20();
