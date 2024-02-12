@@ -29,25 +29,28 @@ using namespace std;
 BB_DS18B20 * ds18b20;
 
 std::vector < unsigned long long > ds_ID; //vector contenant l'ID des ds18b20
-std::vector < double > ds_temperature; //vector qui va contenir les températures des ds18b20
+std::vector < double >
+ds_temperature; //vector qui va contenir les températures des ds18b20
 
-void loadDSConfig(string filename, std::vector < unsigned long long > & array) {
+void loadDSConfig (string filename,
+                   std::vector < unsigned long long > & array) {
   unsigned long long ds_ID;
   stringstream ss;
-  ifstream file(filename);
-  if (file.is_open()) {
+  ifstream file (filename);
+  if (file.is_open() ) {
     string line;
-    while (getline(file, line)) {
+    while (getline (file, line) ) {
       // enleve espace
-      line.erase(remove(line.begin(), line.end(), ' '), line.end());
+      line.erase (remove (line.begin(), line.end(), ' '), line.end() );
       //  avons-nous au moins 17 caracteres
       if (line.size() == 17) {
         // ok avons-nous 28-
-        if (line.substr(0, 3) == "28-") {
-          stringstream ss(line.substr(3, -1));
+        if (line.substr (0, 3) == "28-") {
+          stringstream ss (line.substr (3, -1) );
           ss >> hex >> ds_ID;
           ds_ID = (ds_ID << 8) | 0x28;
-          array.push_back(ds_ID); // valide donc insère ce capteur dans la matrice vector ds_ID
+          array.push_back (
+            ds_ID); // valide donc insère ce capteur dans la matrice vector ds_ID
         }
       }
     }
@@ -64,7 +67,7 @@ void lireDS18B20() {
   // l'indetification des DS18B20  sont dans ds_ID
 
   for (uint loop = 0; loop < ds_ID.size(); loop++) {
-    if (ds18b20 -> ReadSensor(ds_ID[loop])) {
+    if (ds18b20 -> ReadSensor (ds_ID[loop]) ) {
       // valeur valide
       ds_temperature[loop] = ds18b20 -> temperature;
     } else
@@ -91,6 +94,8 @@ long compteurEgouttageFr = 0;
 long compteurFinEgouttageFr = 0;
 long compteurCompCh = 0;
 long compteurDegElec = 0;
+long compteurFinDegTemperature = 0;
+long compteurFinDegTemps = 0;
 long compteurDegNat = 0;
 long compteurEgouttageNat = 0;
 long compteurFinEgouttageNat = 0;
@@ -116,7 +121,7 @@ float consigneVitExtFr = 20.0;
 float consigneVitIntFr = 23.0;
 float consigneBlocChauf = 11.0;
 float consigneDepartVentCh = 25.0; // 35.0°C
-float consigneModeDegCh = 5;
+float consigneModeDegCh = 5.0;
 float consigneFinDegCh = 12.5;
 float consigneVitIntCh = 23.0;
 float consigneVitExtCh = 5.0;
@@ -137,7 +142,7 @@ bool tempVitExtCh = false;
 // les temporisations
 
 unsigned long departAutoMode;
-unsigned long autoMode = 1000000; // 5 secondes 
+unsigned long autoMode = 1000000; // 5 secondes
 unsigned long departTempoV4V;
 unsigned long tempoV4V = 2700000; // 45 secondes
 unsigned long departTempoComp;
@@ -149,7 +154,7 @@ unsigned long tempoV4VDegElec = 6000000; // 1 minutes
 unsigned long departTempoTempDegElec;
 unsigned long tempoTempDegElec = 30000000; // 5 minutes
 unsigned long departTempoDegCh;
-unsigned long tempoDegCh = 280000000; // 45 minutes
+unsigned long tempoDegCh = 280000000; // 45 minutes 280000000
 unsigned long departTempoDegNat;
 unsigned long tempoDegNat = 60000000; // 10 minutes
 unsigned long departTempoEgouttage;
@@ -218,7 +223,7 @@ void hysteresisTempVitesseExtChauf() {
 // les commandes des fonctions
 
 void commandeFroid() {
-  if (digitalRead(thermostats) == 0) {
+  if (digitalRead (thermostats) == 0) {
     fonctionFr = true;
   } else {
     fonctionFr = false;
@@ -226,8 +231,9 @@ void commandeFroid() {
 }
 
 void commandeChauffage() {
-  if (ds_temperature[0] <= consigneBlocChauf && digitalRead(thermostats) == 0) // si temperature exterieur au NORD est inferieur a 11°C et que un des 5 thermostat est NC (normalement closed (fermer))
-  {
+  if (ds_temperature[0] <= consigneBlocChauf &&
+      digitalRead (thermostats) ==
+      0) { // si temperature exterieur au NORD est inferieur a 11°C et que un des 5 thermostat est NC (normalement closed (fermer))
     fonctionCh = true;
   } else {
     fonctionCh = false;
@@ -235,7 +241,7 @@ void commandeChauffage() {
 }
 
 void commandeCanicule() {
-  if (digitalRead(thermostats) == 0 && tempIntCa) {
+  if (digitalRead (thermostats) == 0 && tempIntCa) {
     fonctionCa = true;
   } else {
     fonctionCa = false;
@@ -245,70 +251,68 @@ void commandeCanicule() {
 // les relais des ventilateurs interieur et exterieur
 
 void activeRelaisVentFroid() {
-  digitalWrite(relaiVentUnitExt, LOW);
+  digitalWrite (relaiVentUnitExt, LOW);
 
-  if (tempVitExtFr) // si temperature unité exterieur est supperieur a 20°C
-  {
-    digitalWrite(relaiVitesseVentExt, LOW); // grande vitesse 
+  if (tempVitExtFr) { // si temperature unité exterieur est supperieur a 20°C
+    digitalWrite (relaiVitesseVentExt, LOW); // grande vitesse
   } else {
-    digitalWrite(relaiVitesseVentExt, HIGH); // petite vitesse
+    digitalWrite (relaiVitesseVentExt, HIGH); // petite vitesse
   }
 
-  digitalWrite(relaiVentUnitInt, LOW);
+  digitalWrite (relaiVentUnitInt, LOW);
 
-  if (tempVitIntFr) // si la temperature unité interieur est inferieur a 23°C
-  {
-    digitalWrite(relaiVitesseVentInt, HIGH); // ventilateur interieur petite vitesse
+  if (tempVitIntFr) { // si la temperature unité interieur est inferieur a 23°C
+    digitalWrite (relaiVitesseVentInt,
+                  HIGH); // ventilateur interieur petite vitesse
   } else {
-    digitalWrite(relaiVitesseVentInt, LOW); // ventilateur interieur grande vitesse
+    digitalWrite (relaiVitesseVentInt, LOW); // ventilateur interieur grande vitesse
   }
 }
 
 void activeRelaisVitesseVentIntChauffage() {
-  if (tempVitIntCh) // temperature a l'aspiration  
-  {
-    digitalWrite(relaiVitesseVentInt, LOW); // grande vitesse
+  if (tempVitIntCh) { // temperature a l'aspiration
+    digitalWrite (relaiVitesseVentInt, LOW); // grande vitesse
   } else {
-    digitalWrite(relaiVitesseVentInt, HIGH); // petite vitesse
+    digitalWrite (relaiVitesseVentInt, HIGH); // petite vitesse
   }
 }
 
 void activeRelaisVentExtChauffage() {
-  digitalWrite(relaiVentUnitExt, LOW);
+  digitalWrite (relaiVentUnitExt, LOW);
 
   if (tempVitExtCh) {
-    digitalWrite(relaiVitesseVentExt, HIGH); // petite vitesse
+    digitalWrite (relaiVitesseVentExt, HIGH); // petite vitesse
   } else {
-    digitalWrite(relaiVitesseVentExt, LOW); // grande vitesse
+    digitalWrite (relaiVitesseVentExt, LOW); // grande vitesse
   }
 }
 
 void activeRelaisVentsCanicule() {
-  digitalWrite(relaiVentUnitInt, LOW);
-  digitalWrite(relaiVitesseVentInt, LOW);
-  digitalWrite(relaiVentUnitExt, LOW);
-  digitalWrite(relaiVitesseVentExt, LOW);
+  digitalWrite (relaiVentUnitInt, LOW);
+  digitalWrite (relaiVitesseVentInt, LOW);
+  digitalWrite (relaiVentUnitExt, LOW);
+  digitalWrite (relaiVitesseVentExt, LOW);
 }
 
 void activeRelaisVentEgouttageFr() {
-  digitalWrite(relaiVentUnitInt, LOW);
-  digitalWrite(relaiVitesseVentInt, HIGH); // petite vitesse
+  digitalWrite (relaiVentUnitInt, LOW);
+  digitalWrite (relaiVitesseVentInt, HIGH); // petite vitesse
 }
 
 void activeRelaisVentEgouttageCh() {
-  digitalWrite(relaiVentUnitExt, LOW);
-  digitalWrite(relaiVitesseVentExt, LOW); // grande vitesse
+  digitalWrite (relaiVentUnitExt, LOW);
+  digitalWrite (relaiVitesseVentExt, LOW); // grande vitesse
 }
 
 // l'arret des relais ( HIGH 0 )
 
 void desactiveTousRelais() {
-  digitalWrite(relaiVentUnitExt, HIGH);
-  digitalWrite(relaiVentUnitInt, HIGH);
-  digitalWrite(relaiVitesseVentExt, HIGH);
-  digitalWrite(relaiVitesseVentInt, HIGH);
-  digitalWrite(relaiComp, HIGH);
-  digitalWrite(relaiV4V, HIGH);
+  digitalWrite (relaiVentUnitExt, HIGH);
+  digitalWrite (relaiVentUnitInt, HIGH);
+  digitalWrite (relaiVitesseVentExt, HIGH);
+  digitalWrite (relaiVitesseVentInt, HIGH);
+  digitalWrite (relaiComp, HIGH);
+  digitalWrite (relaiV4V, HIGH);
 }
 
 enum {
@@ -353,10 +357,10 @@ void gainable() {
 
     departAutoMode = clock();
     if (ds_temperature[0] < consigneExt) {
-      digitalWrite(relaiEteHiver, HIGH);
+      digitalWrite (relaiEteHiver, HIGH);
       etatsGainable = COMMANDE_CHAUFFAGE;
     } else if (ds_temperature[0] <= consigneCanicule) {
-      digitalWrite(relaiEteHiver, LOW); // relais ete hiver a l'etat 1 
+      digitalWrite (relaiEteHiver, LOW); // relais ete hiver a l'etat 1
       etatsGainable = COMMANDE_FROID;
     } else {
       etatsGainable = COMMANDE_CANICULE;
@@ -385,7 +389,7 @@ void gainable() {
       etatsGainable = COMMANDE_FROID;
     } else if (clock() - departTempoV4V >= tempoV4V) {
       departTempoComp = clock();
-      digitalWrite(relaiV4V, LOW);
+      digitalWrite (relaiV4V, LOW);
       compteurV4V++;
       etatsGainable = TEMPO_COMPRESSEUR_FROID;
     } else {
@@ -424,7 +428,7 @@ void gainable() {
       etatsGainable = DEGIVRAGE_FROID;
     } else {
       activeRelaisVentFroid();
-      digitalWrite(relaiComp, LOW);
+      digitalWrite (relaiComp, LOW);
     }
 
     break;
@@ -506,11 +510,11 @@ void gainable() {
     } else if (clock() - departTempoDegCh >= tempoDegCh) {
       etatsGainable = MODE_DEGIVRAGE;
     } else {
-      digitalWrite(relaiComp, LOW);
+      digitalWrite (relaiComp, LOW);
       activeRelaisVitesseVentIntChauffage();
       activeRelaisVentExtChauffage();
       if (ds_temperature[4] >= consigneDepartVentCh) {
-        digitalWrite(relaiVentUnitInt, LOW);
+        digitalWrite (relaiVentUnitInt, LOW);
       }
     }
     break;
@@ -591,7 +595,7 @@ void gainable() {
       compteurCompDegElec++;
       etatsGainable = DEGIVRAGE_ELECTRIC;
     } else {
-      digitalWrite(relaiV4V, LOW);
+      digitalWrite (relaiV4V, LOW);
     }
 
     break;
@@ -599,12 +603,18 @@ void gainable() {
   case DEGIVRAGE_ELECTRIC:
     cout << "DEGIVRAGE_ELECTRIC" << endl << endl;
 
-    if (ds_temperature[2] >= consigneFinDegCh || (clock() - departTempoTempDegElec >= tempoTempDegElec)) {
+    if (ds_temperature[2] >= consigneFinDegCh) {
       departTempoEgouttage = clock();
       compteurEgouttageCh++;
+      compteurFinDegTemperature++;
+      etatsGainable = EGOUTTAGE_CHAUFFAGE;
+    } else if (clock() - departTempoTempDegElec >= tempoTempDegElec) {
+      departTempoEgouttage = clock();
+      compteurEgouttageCh++;
+      compteurFinDegTemps++;
       etatsGainable = EGOUTTAGE_CHAUFFAGE;
     } else {
-      digitalWrite(relaiComp, LOW);
+      digitalWrite (relaiComp, LOW);
     }
 
     break;
@@ -654,7 +664,7 @@ void gainable() {
       etatsGainable = COMMANDE_CANICULE;
     } else if (clock() - departTempoV4V >= tempoV4V) {
       departTempoComp = clock();
-      digitalWrite(relaiV4V, LOW);
+      digitalWrite (relaiV4V, LOW);
       compteurV4VCa++;
       etatsGainable = TEMPO_COMPRESSEUR_CANICULE;
     }
@@ -689,14 +699,14 @@ void gainable() {
       compteurDegCa++;
       etatsGainable = DEGIVRAGE_FROID;
     } else {
-      digitalWrite(relaiComp, LOW);
+      digitalWrite (relaiComp, LOW);
     }
 
     break;
 
   case FILTRE:
 
-    if (digitalRead(capteurFiltre) == 0) {
+    if (digitalRead (capteurFiltre) == 0) {
       nettoyageFiltre = 0;
     }
 
@@ -716,61 +726,84 @@ void fonctionsDivers() {
   hysteresisTempVitesseIntFroid();
 }
 
-void my_ctrl_c_handler(int s) {
+void my_ctrl_c_handler (int s) {
   desactiveTousRelais();
-  digitalWrite(relaiEteHiver,HIGH);
+  digitalWrite (relaiEteHiver,HIGH);
   delete ds18b20;
   release_gpiod();
-  exit(0);
+  exit (0);
 }
 
-int main(void) {
+int main (void) {
 
   /******  ceci est le setup  ******/
 
-  pinMode(relaiEteHiver, OUTPUT);
-  digitalWrite(relaiEteHiver, HIGH);
-  pinMode(relaiComp, OUTPUT);
-  digitalWrite(relaiComp, HIGH);
-  pinMode(relaiV4V, OUTPUT);
-  digitalWrite(relaiV4V, HIGH);
-  pinMode(relaiVentUnitExt, OUTPUT);
-  digitalWrite(relaiVentUnitExt, HIGH);
-  pinMode(relaiVitesseVentExt, OUTPUT);
-  digitalWrite(relaiVitesseVentExt, HIGH);
-  pinMode(relaiVentUnitInt, OUTPUT);
-  digitalWrite(relaiVentUnitInt, HIGH);
-  pinMode(relaiVitesseVentInt, OUTPUT);
-  digitalWrite(relaiVitesseVentInt, HIGH);
+  pinMode (relaiEteHiver, OUTPUT);
+  digitalWrite (relaiEteHiver, HIGH);
+  pinMode (relaiComp, OUTPUT);
+  digitalWrite (relaiComp, HIGH);
+  pinMode (relaiV4V, OUTPUT);
+  digitalWrite (relaiV4V, HIGH);
+  pinMode (relaiVentUnitExt, OUTPUT);
+  digitalWrite (relaiVentUnitExt, HIGH);
+  pinMode (relaiVitesseVentExt, OUTPUT);
+  digitalWrite (relaiVitesseVentExt, HIGH);
+  pinMode (relaiVentUnitInt, OUTPUT);
+  digitalWrite (relaiVentUnitInt, HIGH);
+  pinMode (relaiVitesseVentInt, OUTPUT);
+  digitalWrite (relaiVitesseVentInt, HIGH);
 
-  pinMode(thermostats, INPUT_PULLUP);
-  pinMode(capteurFiltre, INPUT_PULLUP);
+  pinMode (thermostats, INPUT_PULLUP);
+  pinMode (capteurFiltre, INPUT_PULLUP);
 
   int DS_PIN = 4;
-  pinMode(DS_PIN, OPENDRAIN_PULLUP);
-  ds18b20 = new BB_DS18B20(gpioline[DS_PIN]);
+  pinMode (DS_PIN, OPENDRAIN_PULLUP);
+  ds18b20 = new BB_DS18B20 (gpioline[DS_PIN]);
   // charge info sur les ds18b20
-  loadDSConfig("DS18B20.conf", ds_ID);
+  loadDSConfig ("DS18B20.conf", ds_ID);
+  std::cout << "config DS\n";
+  // charge info sur les ds18b20
+  char  ficConf[654] = "DS18B20.conf";
+  FILE * confHan = fopen(ficConf, "r");
+  if (NULL == confHan) {
+    std::cout <<
+        "Le fichier de configuration \n" << ficConf << "\n doit exister\n";
+    return (111);
+  }
+  fclose(confHan);
+  loadDSConfig("DS18B20.conf", ds_ID); // protégé contre le cas où il est absent 
+  std::cout << "\n configuré\n";
+  if (ds_ID.size() < 2) {
+    std::cout << "\nVous devez avoir au moins un thermomètre\n";
+    return(112);
+  }
 
   // créer  le vecteur contenant la température des DS18b20
   for (uint loop = 0; loop < ds_ID.size(); loop++)
-    ds_temperature.push_back(-9999.9); //  enregistre une information invalide pour commencer
+    ds_temperature.push_back (
+      -9999.9); //  enregistre une information invalide pour commencer
 
   /****** ceci est la loop  *****/
 
   while (1) {
-    cout << "ds_temperature[0] // temperatureExt = " << (int(ds_temperature[0] * 2)) / 2.0 << " °C " << endl; // sonde NORD
-    cout << "ds_temperature[1] // temperatureUnitéExt = " << (int(ds_temperature[1] * 2)) / 2.0 << " °C " << endl;
-    cout << "ds_temperature[2] // temperatureEchangeurExt = " << (int(ds_temperature[2] * 2)) / 2.0 << " °C " << endl;
-    cout << "ds_temperature[3] // temperatureUnitéInt = " << (int(ds_temperature[3] * 2)) / 2.0 << " °C " << endl;
-    cout << "ds_temperature[4] // temperatureEchangeurInt = " << (int(ds_temperature[4] * 2)) / 2.0 << " °C " << endl;
+    cout << "ds_temperature[0] // temperatureExt = " << (int (
+           ds_temperature[0] * 2) ) / 2.0 << " °C " << endl; // sonde NORD
+    cout << "ds_temperature[1] // temperatureUnitéExt = " << (int (
+           ds_temperature[1] * 2) ) / 2.0 << " °C " << endl;
+    cout << "ds_temperature[2] // temperatureEchangeurExt = " << (int (
+           ds_temperature[2] * 2) ) / 2.0 << " °C " << endl;
+    cout << "ds_temperature[3] // temperatureUnitéInt = " << (int (
+           ds_temperature[3] * 2) ) / 2.0 << " °C " << endl;
+    cout << "ds_temperature[4] // temperatureEchangeurInt = " << (int (
+           ds_temperature[4] * 2) ) / 2.0 << " °C " << endl;
     consigneDelta = ds_temperature[0] - delta;
-    cout << "consigne Canicule Interieur =  " << (int(consigneDelta * 2)) / 2.0 << " °C " << endl << endl;
+    cout << "consigne Canicule Interieur =  " << (int (consigneDelta * 2) ) / 2.0 <<
+         " °C " << endl << endl;
 
     time_t rawtime;
-    time( & rawtime);
-    cout << "date, heure, année -> " << ctime( & rawtime) << endl;
-    cout << "chrono = " << clock() << " microsecondes" << endl;
+    time ( & rawtime);
+    cout << "date, heure, année -> " << ctime ( & rawtime) << endl;
+    cout << "chrono = " << clock() << " tick/microsecondes" << endl;
     cout << "departChronoFiltre : " << departChronoFiltre << endl;
     cout << "finChronoFiltre : " << finChronoFiltre << endl;
     cout << "chronoNettoyageFiltre : " << nettoyageFiltre << endl << endl;
@@ -786,8 +819,12 @@ int main(void) {
     cout << "compteurEgouttageNaturel = " << compteurEgouttageNat << endl;
     cout << "compteurFinEgouttageNaturel = " << compteurFinEgouttageNat << endl;
     cout << "compteurDegivrageElectric = " << compteurCompDegElec << endl;
+    cout << "compteurFinDegivrageTemperature = " << compteurFinDegTemperature <<
+         endl;
+    cout << "compteurFinDegivrageTemps = " << compteurFinDegTemps << endl;
     cout << "compteurV4VDegivrageElectric = " << compteurV4VDegElec << endl;
-    cout << "compteurCompresseurDegivrageElectric = " << compteurCompDegElec << endl;
+    cout << "compteurCompresseurDegivrageElectric = " << compteurCompDegElec <<
+         endl;
     cout << "compteurEgouttageChauffage = " << compteurEgouttageCh << endl;
     cout << "compteurFinEgouttageChauffage = " << compteurFinEgouttageCh << endl;
     cout << "compteurV4VCanicule = " << compteurV4VCa << endl;
@@ -796,7 +833,7 @@ int main(void) {
     lireDS18B20();
     gainable();
     fonctionsDivers();
-    signal(SIGINT, my_ctrl_c_handler);
+    signal (SIGINT, my_ctrl_c_handler);
 
   }
   delete ds18b20;
