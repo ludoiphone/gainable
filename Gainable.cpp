@@ -718,6 +718,7 @@ void fonctionsDivers() {
 
 void my_ctrl_c_handler(int s) {
   desactiveTousRelais();
+  digitalWrite(relaiEteHiver,HIGH);
   delete ds18b20;
   release_gpiod();
   exit(0);
