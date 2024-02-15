@@ -1,7 +1,7 @@
 CC := g++
 CFLAGS := -Wall -g --pedantic -Os
 AR := /usr/bin/ar -crs
-TARGET := gainable
+TARGET := Gainable
 RM := /usr/bin/rm
 RACINE := /home/pi/.local/
 BIN=$(RACINE)/bin/
@@ -14,7 +14,7 @@ OBJS := $(patsubst %.cpp,%.o,$(SRCS))
 BIB := gpioPinlib.a
 
 # cosmetique dans ce cas
-ASTYLE := /usr/bin/astyle -d -xC80 -xL  -s2 --style=goog
+ASTYLE := /usr/bin/astyle -d -xC80 -xL  -s2 --style=google
 
 all: $(TARGET) $(BIB)
 
