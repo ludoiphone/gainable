@@ -25,32 +25,32 @@ BB_DS18B20::BB_DS18B20 (struct gpiod_line *_gpioline) {
   for (int loop=0; loop<SCAN_MAX; loop++)
     ScanID[loop]=0LL;
   WaitTime=750;
-}
+  }
 
 BB_DS18B20::~BB_DS18B20() {
   delete []ScanID;
-}
+  }
 
 
 void BB_DS18B20::clrBit (void) {
   gpiod_line_set_value (gpioline,0);
-}
+  }
 
 void BB_DS18B20::setBit (void) {
   gpiod_line_set_value (gpioline,1);
-}
+  }
 int  BB_DS18B20::readBit (void) {
   return gpiod_line_get_value (gpioline);
-}
+  }
 
 int  BB_DS18B20::ReadScratchPad (void) {
   int loop;
   WriteByte (DS18B20_READ_SCRATCHPAD);
   for (loop=0; loop<9; loop++) {
     ScratchPad[loop]=ReadByte();
-  }
+    }
   return 1;
-}
+  }
 
 void BB_DS18B20::WriteScratchPad (uint8_t TH, uint8_t TL, uint8_t config) {
 
@@ -78,7 +78,7 @@ void BB_DS18B20::WriteScratchPad (uint8_t TH, uint8_t TL, uint8_t config) {
   // Write config
 
   WriteByte (config);
-}
+  }
 
 
 void  BB_DS18B20::CopyScratchPad (void) {
@@ -95,30 +95,30 @@ void  BB_DS18B20::CopyScratchPad (void) {
 
   WriteByte (DS18B20_COPY_SCRATCHPAD);
   usleep (100000);
-}
+  }
 
 
 void BB_DS18B20::ChangeSensorsResolution (int resolution) {
   uint8_t config=0;
 
   switch (resolution) {
-  case 9:
-    config=0x1f;
-    break;
-  case 10:
-    config=0x3f;
-    break;
-  case 11:
-    config=0x5f;
-    break;
-  default:
-    config=0x7f;
-    break;
-  }
+    case 9:
+      config=0x1f;
+      break;
+    case 10:
+      config=0x3f;
+      break;
+    case 11:
+      config=0x5f;
+      break;
+    default:
+      config=0x7f;
+      break;
+    }
   WriteScratchPad (0xff,0xff,config);
   usleep (1000);
   CopyScratchPad();
-}
+  }
 
 
 int BB_DS18B20::GlobalStartConversion (void) {
@@ -132,13 +132,13 @@ int BB_DS18B20::GlobalStartConversion (void) {
       WriteByte (DS18B20_CONVERT_T);
       usleep (WaitTime * 1000);
       return 1;
-    }
+      }
     retry++;
-  }
+    }
   return 0;
 
 
-}
+  }
 
 
 void BB_DS18B20::ScanForSensor() {
@@ -162,13 +162,15 @@ void BB_DS18B20::ScanForSensor() {
         ID=_ID;
         ScanID[ScanCount++]=ID;
         NextBit=_NextBit;
-      } else retry++;
-    } else if (rcode==0 )
+        }
+      else retry++;
+      }
+    else if (rcode==0 )
       break;
     else
       retry++;
+    }
   }
-}
 
 void BB_DS18B20::SelectSensor (unsigned  long long ID) {
   int BitIndex;
@@ -178,7 +180,7 @@ void BB_DS18B20::SelectSensor (unsigned  long long ID) {
   for (BitIndex=0; BitIndex<64; BitIndex++)
     WriteBit (IDGetBit (&ID,BitIndex) );
 
-}
+  }
 
 
 int  BB_DS18B20::SearchSensor (unsigned long long * ID, int * LastBitChange) {
@@ -196,7 +198,7 @@ int  BB_DS18B20::SearchSensor (unsigned long long * ID, int * LastBitChange) {
     IDSetBit (ID,*LastBitChange,1);
     for (BitIndex=*LastBitChange+1; BitIndex<64; BitIndex++)
       IDSetBit (ID,BitIndex,0);
-  }
+    }
 
   *LastBitChange=-1;
 
@@ -219,29 +221,32 @@ int  BB_DS18B20::SearchSensor (unsigned long long * ID, int * LastBitChange) {
       if (IDGetBit (ID,BitIndex) ) {
         // Bit High already set
         WriteBit (1);
-      } else {
+        }
+      else {
         // ok let's try LOW value first
         *LastBitChange=BitIndex;
         WriteBit (0);
+        }
       }
-    } else if (!Bit) {
+    else if (!Bit) {
 //	printf("1");
       WriteBit (1);
       IDSetBit (ID,BitIndex,1);
-    } else {
+      }
+    else {
       //printf("0");
       WriteBit (0);
       IDSetBit (ID,BitIndex,0);
-    }
+      }
 //   if((BitIndex % 4)==3)printf(" ");
-  }
+    }
 //
 // printf("\n");
   return 1;
 
 
 
-}
+  }
 
 
 
@@ -252,7 +257,7 @@ int BB_DS18B20::ReadSensor (unsigned long long ID) {
   union {
     short SHORT;
     unsigned char CHAR[2];
-  } IntTemp;
+    } IntTemp;
 
   temperature = -9999.9;
 
@@ -273,19 +278,19 @@ int BB_DS18B20::ReadSensor (unsigned long long ID) {
     //Check Resolution
     resolution=0;
     switch (ScratchPad[4]) {
-    case  0x1f:
-      resolution=9;
-      break;
-    case  0x3f:
-      resolution=10;
-      break;
-    case  0x5f:
-      resolution=11;
-      break;
-    case  0x7f:
-      resolution=12;
-      break;
-    }
+      case  0x1f:
+        resolution=9;
+        break;
+      case  0x3f:
+        resolution=10;
+        break;
+      case  0x5f:
+        resolution=11;
+        break;
+      case  0x7f:
+        resolution=12;
+        break;
+      }
 
     if (resolution==0) continue;
     // Read Temperature
@@ -295,13 +300,13 @@ int BB_DS18B20::ReadSensor (unsigned long long ID) {
 
     temperature =  0.0625 * (double) IntTemp.SHORT;
     return 1;
-  }
+    }
   return 0;
-}
+  }
 
 void BB_DS18B20::Delay1us (void) {
   DelayNanosecondsNoSleep (1000);
-}
+  }
 
 void BB_DS18B20::DelayNanosecondsNoSleep (int delay_ns) {
   long int start_time;
@@ -317,8 +322,8 @@ void BB_DS18B20::DelayNanosecondsNoSleep (int delay_ns) {
       time_difference += 1000000000;            //(Rolls over every 1 second)
     if (time_difference > (delay_ns ) )     //Delay for # nS
       break;
+    }
   }
-}
 
 void BB_DS18B20::DelayMicrosecondsNoSleep (int delay_us) {
   long int start_time;
@@ -334,8 +339,8 @@ void BB_DS18B20::DelayMicrosecondsNoSleep (int delay_us) {
       time_difference += 1000000000;            //(Rolls over every 1 second)
     if (time_difference > (delay_us * 1000) )     //Delay for # nS
       break;
+    }
   }
-}
 
 int  BB_DS18B20::DoReset (void) {
 
@@ -348,9 +353,9 @@ int  BB_DS18B20::DoReset (void) {
   if (readBit() ==0) {
     DelayMicrosecondsNoSleep (420);
     return 1;
-  }
+    }
   return 0;
-}
+  }
 
 void BB_DS18B20::WriteByte (uint8_t value) {
   uint8_t Mask=1;
@@ -364,16 +369,17 @@ void BB_DS18B20::WriteByte (uint8_t value) {
       setBit();
       DelayMicrosecondsNoSleep (60);
 
-    } else {
+      }
+    else {
       DelayMicrosecondsNoSleep (60);
       setBit();
       DelayMicrosecondsNoSleep (1);
-    }
+      }
     Mask*=2;
     DelayMicrosecondsNoSleep (60);
-  }
+    }
   usleep (100);
-}
+  }
 
 void BB_DS18B20::WriteBit (uint8_t value) {
   clrBit();
@@ -381,13 +387,14 @@ void BB_DS18B20::WriteBit (uint8_t value) {
     Delay1us();
     setBit();
     DelayMicrosecondsNoSleep (60);
-  } else {
+    }
+  else {
     DelayMicrosecondsNoSleep (60);
     setBit();
     DelayMicrosecondsNoSleep (1);
-  }
+    }
   DelayMicrosecondsNoSleep (60);
-}
+  }
 
 uint8_t BB_DS18B20::ReadBit (void) {
   unsigned char rvalue=0;
@@ -401,7 +408,7 @@ uint8_t BB_DS18B20::ReadBit (void) {
     rvalue=1;
   DelayMicrosecondsNoSleep (60);
   return rvalue;
-}
+  }
 
 uint8_t BB_DS18B20::ReadByte (void) {
 
@@ -423,10 +430,10 @@ uint8_t BB_DS18B20::ReadByte (void) {
       data |= Mask;
     Mask*=2;
     DelayMicrosecondsNoSleep (60);
-  }
+    }
 
   return data;
-}
+  }
 
 
 uint8_t  BB_DS18B20::CalcCRC (uint8_t * data, int byteSize) {
@@ -440,19 +447,20 @@ uint8_t  BB_DS18B20::CalcCRC (uint8_t * data, int byteSize) {
       if ( (shift_register ^ DataByte) & 1) {
         shift_register = shift_register >> 1;
         shift_register ^=  0x8C;
-      } else
+        }
+      else
         shift_register = shift_register >> 1;
       DataByte = DataByte >> 1;
+      }
     }
-  }
   return shift_register;
-}
+  }
 
 uint8_t BB_DS18B20::IDGetBit (unsigned long long *llvalue,uint8_t bit) {
   unsigned long long Mask = 1ULL << bit;
 
   return ( (*llvalue & Mask) ? 1 : 0);
-}
+  }
 
 
 
@@ -465,9 +473,9 @@ unsigned long long   BB_DS18B20::IDSetBit (unsigned long long *llvalue,
       *llvalue &= ~Mask;
     else
       *llvalue |= Mask;
-  }
+    }
   return *llvalue;
-}
+  }
 
 
 string BB_DS18B20::IdToString (unsigned long long id) {
@@ -481,4 +489,4 @@ string BB_DS18B20::IdToString (unsigned long long id) {
   ss >> SensorID;
   ss.flags ( f );
   return SensorID;
-}
+  }
